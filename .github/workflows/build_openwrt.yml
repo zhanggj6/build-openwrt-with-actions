@@ -148,6 +148,19 @@ jobs:
             openWRT/feeds.conf.default
           include-hidden-files: true
 
+      - name: 将 SSH 修改后的 .config 复制回仓库根目录 (Copy modified .config back to repo root)
+        if: ${{inputs.ssh == true}}
+        run: cp -f openWRT/.config .config
+
+      - name: 提交并推送 .config 到 GitHub 仓库 (Commit and push .config to GitHub)
+        if: ${{inputs.ssh == true}}
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git add .config
+          git diff --cached --quiet || git commit -m "Update .config via SSH"
+          git push "https://${{github.actor}}:${{secrets.GITHUB_TOKEN}}@github.com/${{github.repository}}.git" HEAD:${{github.ref}}
+
       - name: 再次复制当前仓库的配置文件到 openWRT 仓库  (Copy current repo config to openWRT repo)
         if: ${{inputs.ssh == false}}
         run: cp -f .config openWRT/
